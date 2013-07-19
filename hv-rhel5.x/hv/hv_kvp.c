@@ -399,8 +399,8 @@ kvp_send_key(void *dummy)
 		message->body.kvp_set.data.key_size =
 			utf8_wcstombs(
 			message->body.kvp_set.data.key,
-			(wchar_t *)in_msg->body.kvp_delete.key,
-			in_msg->body.kvp_delete.key_size) + 1;
+			(wchar_t *)in_msg->body.kvp_set.data.key,
+			in_msg->body.kvp_set.data.key_size) + 1;
 			break;
 
 	case KVP_OP_DELETE:

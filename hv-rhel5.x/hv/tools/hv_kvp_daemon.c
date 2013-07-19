@@ -1609,6 +1609,7 @@ int main(void)
 			free(if_name);
 			break;
 
+#endif //NOTYET 
 		case KVP_OP_SET:
 			if (kvp_key_add_or_modify(pool,
 					hv_msg->body.kvp_set.data.key,
@@ -1617,7 +1618,6 @@ int main(void)
 					hv_msg->body.kvp_set.data.value_size))
 					hv_msg->error = HV_S_CONT;
 			break;
-#endif //NOTYET 
 
 		case KVP_OP_GET:
 			if (kvp_get_value(pool,
