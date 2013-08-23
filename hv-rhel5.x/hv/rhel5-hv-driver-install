@@ -28,3 +28,8 @@ mkinitrd --preload=hv_storvsc --preload=hv_timesource  "initrd-$(uname -r).img" 
 echo "Installing new initramfs"
 
 mv -f "initrd-$(uname -r).img" /boot/"initrd-$(uname -r).img"
+
+echo "Config X-Window"
+
+cp -f ./xorg.conf /etc/X11/
+
