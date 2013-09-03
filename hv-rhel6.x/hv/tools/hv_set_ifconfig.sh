@@ -54,6 +54,9 @@ echo "NM_CONTROLLED=no" >> $1
 echo "PEERDNS=yes" >> $1
 echo "ONBOOT=yes" >> $1
 
+sed -i 's/IPADDR0/IPADDR/g' $1
+sed -i 's/NETMASK0/NETMASK/g' $1
+
 
 cp $1 /etc/sysconfig/network-scripts/
 
