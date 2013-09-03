@@ -297,6 +297,12 @@ static void vmbus_process_offer(void  *data)
 		free_channel(newchannel);
 		return;
 	}
+	/*
+	 * This state is used to indicate a successful open
+	 * so that when we do close the channel normally, we
+	 * can cleanup properly
+	 */
+	newchannel->state = CHANNEL_OPEN_STATE;
 
 	/*
 	 * Start the process of binding this offer to the driver
@@ -324,13 +330,6 @@ static void vmbus_process_offer(void  *data)
 		kfree(newchannel->device_obj);
 
 		free_channel(newchannel);
-	} else {
-		/*
-		 * This state is used to indicate a successful open
-		 * so that when we do close the channel normally, we
-		 * can cleanup properly
-		 */
-		newchannel->state = CHANNEL_OPEN_STATE;
 	}
 }
 
