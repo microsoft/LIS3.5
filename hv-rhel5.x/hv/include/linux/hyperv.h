@@ -120,13 +120,6 @@ struct hv_vss_msg {
  * bytes, including any null terminators
  */
 #define HV_KVP_EXCHANGE_MAX_VALUE_SIZE          (2048)
-/*
- * The connector interface on 2.6.18 kernels can only
- * support limited payload; so we can only support
- * smaller strings on 2.6.18 systems.
- */
-#define KVP_INT_EXCHANGE_MAX_VALUE_SIZE          (512)
-
 
 /*
  * Maximum key size - the registry limit for the length of an entry name
@@ -134,12 +127,6 @@ struct hv_vss_msg {
  */
 
 #define HV_KVP_EXCHANGE_MAX_KEY_SIZE            (512)
-/*
- * The connector interface on 2.6.18 kernels can only
- * support limited payload; so we can only support
- * smaller strings on 2.6.18 systems.
- */
-#define KVP_INT_EXCHANGE_MAX_KEY_SIZE            (256)
 
 /*
  * In Linux, we implement the KVP functionality in two components:
@@ -351,66 +338,6 @@ struct hv_kvp_ip_msg {
 	__u8 pool;
 	struct hv_kvp_ipaddr_value      kvp_ip_val;
 } __attribute__((packed));
-
-/*
- * Internal trnsfer definitions.
- * 2.6.18 kernels can only support a limited payload
- * via netlink. We limit the key/value sizes for 2.6.18
- * kernels to come in within the netlink limitations.
- */
-
-struct kvp_int_exchg_msg_value {
-	__u32 value_type;
-	__u32 key_size;
-	__u32 value_size;
-	__u8 key[KVP_INT_EXCHANGE_MAX_KEY_SIZE];
-	union {
-		__u8 value[KVP_INT_EXCHANGE_MAX_VALUE_SIZE];
-		__u32 value_u32;
-		__u64 value_u64;
-	};
-} __attribute__((packed));
-
-
-struct kvp_int_msg_enumerate {
-	__u32 index;
-	struct kvp_int_exchg_msg_value data;
-} __attribute__((packed));
-
-struct kvp_int_msg_get {
-	struct kvp_int_exchg_msg_value data;
-};
-
-struct kvp_int_msg_set {
-	struct kvp_int_exchg_msg_value data;
-};
-
-struct kvp_int_msg_delete {
-	__u32 key_size;
-	__u8 key[KVP_INT_EXCHANGE_MAX_KEY_SIZE];
-};
-
-struct kvp_int_register {
-	__u8 version[KVP_INT_EXCHANGE_MAX_KEY_SIZE];
-};
-
-struct kvp_int_msg {
-	union {
-		struct hv_kvp_hdr	kvp_hdr;
-		int error;
-	};
-	union {
-		struct kvp_int_msg_get		kvp_get;
-		struct kvp_int_msg_set		kvp_set;
-		struct kvp_int_msg_delete	kvp_delete;
-		struct kvp_int_msg_enumerate	kvp_enum_data;
-		struct kvp_int_register		kvp_register;
-	} body;
-} __attribute__((packed));
-
-/*
- * End of internal messages.
- */
 
 #ifdef __KERNEL__
 #include <linux/scatterlist.h>
