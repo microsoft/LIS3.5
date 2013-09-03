@@ -771,10 +771,10 @@ void vmbus_device_unregister(struct hv_device *device_obj)
 	 * Kick off the process of unregistering the device.
 	 * This will call vmbus_remove() and eventually vmbus_device_release()
 	 */
-	device_unregister(&device_obj->device);
-
 	pr_info("child device %s unregistered\n",
 		dev_name(&device_obj->device));
+	device_unregister(&device_obj->device);
+
 }
 
 
