@@ -31,13 +31,18 @@
 /*
  * Pre win8 version numbers used in ws2008 and ws 2008 r2 (win7)
  */
-#define WIN7_SRV_MAJOR   3 
+
+#define WS2008_SRV_MAJOR        1
+#define WS2008_SRV_MINOR        0
+#define WS2008_SRV_VERSION     (WS2008_SRV_MAJOR << 16 | WS2008_SRV_MINOR)
+
+#define WIN7_SRV_MAJOR   3
 #define WIN7_SRV_MINOR   0
-#define WIN7_SRV_MAJOR_MINOR     (WIN7_SRV_MAJOR << 16 | WIN7_SRV_MINOR)
+#define WIN7_SRV_VERSION     (WIN7_SRV_MAJOR << 16 | WIN7_SRV_MINOR)
 
 #define WIN8_SRV_MAJOR   4
 #define WIN8_SRV_MINOR   0
-#define WIN8_SRV_MAJOR_MINOR     (WIN8_SRV_MAJOR << 16 | WIN8_SRV_MINOR)
+#define WIN8_SRV_VERSION     (WIN8_SRV_MAJOR << 16 | WIN8_SRV_MINOR)
 
 
 /*
@@ -574,6 +579,9 @@ void hv_kvp_onchannelcallback(void *context)
 
 	struct icmsg_hdr *icmsghdrp;
 	struct icmsg_negotiate *negop = NULL;
+        int util_fw_version;
+        int kvp_srv_version;
+
 
 	if (kvp_transaction.active) {
 		/*
@@ -592,18 +600,28 @@ void hv_kvp_onchannelcallback(void *context)
 			sizeof(struct vmbuspipe_hdr)];
 
 		if (icmsghdrp->icmsgtype == ICMSGTYPE_NEGOTIATE) {
-			/*
-			 * We start with win8 version and if the host cannot
-			 * support that we use the previous version.
-			 */
-			if (vmbus_prep_negotiate_resp(icmsghdrp, negop,
-				 recv_buffer, UTIL_FW_MAJOR_MINOR,
-				 WIN8_SRV_MAJOR_MINOR))
-				goto done;
+                        /*
+                         * Based on the host, select appropriate
+                         * framework and service versions we will
+                         * negotiate.
+                         */
+                        switch (vmbus_proto_version) {
+                        case (VERSION_WS2008):
+                                util_fw_version = UTIL_WS2K8_FW_VERSION;
+                                kvp_srv_version = WS2008_SRV_VERSION;
+                                break;
+                        case (VERSION_WIN7):
+                                util_fw_version = UTIL_FW_VERSION;
+                                kvp_srv_version = WIN7_SRV_VERSION;
+                                break;
+                        default:
+                                util_fw_version = UTIL_FW_VERSION;
+                                kvp_srv_version = WIN8_SRV_VERSION;
+                        }
+                        vmbus_prep_negotiate_resp(icmsghdrp, negop,
+                                 recv_buffer, util_fw_version,
+                                 kvp_srv_version);
 
-			vmbus_prep_negotiate_resp(icmsghdrp, negop,
-				 recv_buffer, UTIL_FW_MAJOR_MINOR,
-				 WIN7_SRV_MAJOR_MINOR);
 		} else {
 			kvp_msg = (struct hv_kvp_msg *)&recv_buffer[
 				sizeof(struct vmbuspipe_hdr) +
@@ -635,8 +653,6 @@ void hv_kvp_onchannelcallback(void *context)
 			return;
 
 		}
-
-done:
 
 		icmsghdrp->icflags = ICMSGHDRFLAG_TRANSACTION
 			| ICMSGHDRFLAG_RESPONSE;
