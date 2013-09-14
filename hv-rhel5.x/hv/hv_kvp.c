@@ -368,8 +368,6 @@ kvp_respond_to_host(struct hv_kvp_msg *msg_to_host, int error)
 	req_id = kvp_transaction.recv_req_id;
 
 	kvp_transaction.active = false;
-	if (daemon_died)
-		kvp_transaction.active = true;
 
 	icmsghdrp = (struct icmsg_hdr *)
 			&recv_buffer[sizeof(struct vmbuspipe_hdr)];
@@ -682,8 +680,6 @@ int kvp_release(struct inode *inode, struct file *f)
 	 */
 	daemon_died = true;
 	in_hand_shake = true;
-	if (!kvp_transaction.active)
-		kvp_transaction.active = true;
 	return 0;
 }
 
