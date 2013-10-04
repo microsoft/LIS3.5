@@ -29,8 +29,3 @@ fi
 echo "Installing new initramfs"
 
 cp -f "initramfs-$(uname -r).img" /boot/"initramfs-$(uname -r).img"
-
-echo "Config X-Window"
-
-cp -f ./xorg.conf /etc/X11/
-
