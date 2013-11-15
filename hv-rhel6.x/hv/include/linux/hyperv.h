@@ -488,7 +488,7 @@ hv_get_ringbuffer_availbytes(struct hv_ring_buffer_info *rbi,
  *			into the kernel) Every time the Major Number
  *			changes, the Revision number is reset to 0.
  *	Minor Number	Changes when new functionality is added
- *			to the Linux IC's that is not a bug fix.
+ *			to the Linux IC.
  *
  * 3.1 - Added completed hv_utils driver. Shutdown/Heartbeat/Timesync
  */
