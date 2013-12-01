@@ -74,6 +74,8 @@ static struct {
 
 static dev_t kvp_dev;
 static bool daemon_died = false;
+static bool opened; /* currently device opened */
+static struct task_struct *dtp; /* daemon task ptr */
 /*
  * Before we can accept KVP messages from the host, we need
  * to handshake with the user level daemon. This state tracks
@@ -579,10 +581,14 @@ static ssize_t kvp_read(struct file *file, char __user *buf,
 		size_t count, loff_t *ppos)
 {
 	size_t remaining;
+	int ret;
 	/*
 	 * Wait until there is something to be read.
 	 */
-	down_interruptible(&kvp_transaction.read_sema);
+	ret = down_interruptible(&kvp_transaction.read_sema);
+
+	if (ret)
+		return ret;
 
 	/*
 	 * Now copy the complete KVP message to the user.
@@ -669,6 +675,11 @@ int kvp_open(struct inode *inode, struct file *f)
 	/*
 	 * The daemon alive; setup the state.
 	 */
+	if (opened)
+		return -EBUSY;
+
+	opened = true;
+	dtp = current;
 	daemon_died = false;
 	return 0;
 }
@@ -680,6 +691,7 @@ int kvp_release(struct inode *inode, struct file *f)
 	 */
 	daemon_died = true;
 	in_hand_shake = true;
+	dtp = NULL;
 	return 0;
 }
 
@@ -740,6 +752,12 @@ dev_error:
 
 static void kvp_dev_deinit(void)
 {
+	/*
+	 * first kill the daemon.
+	 */
+	if (dtp != NULL)
+		send_sig(SIGKILL, dtp, 0);
+	opened = false;
 	device_destroy(cl, kvp_dev);
 	class_destroy(cl);
 	cdev_del(&kvp_cdev);
