@@ -344,6 +344,7 @@ static int netvsc_change_mtu(struct net_device *ndev, int mtu)
 }
 
 
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
 static int netvsc_set_mac_addr(struct net_device *ndev, void *p)
 {
 	struct net_device_context *ndevctx = netdev_priv(ndev);
@@ -369,6 +370,7 @@ static int netvsc_set_mac_addr(struct net_device *ndev, void *p)
 
 	return err;
 }
+#endif
 
 
 static const struct ethtool_ops ethtool_ops = {
@@ -383,7 +385,9 @@ static const struct net_device_ops device_ops = {
 	.ndo_set_rx_mode =		netvsc_set_multicast_list,
 	.ndo_change_mtu =		netvsc_change_mtu,
 	.ndo_validate_addr =		eth_validate_addr,
+#if LINUX_VERSION_CODE >= KERNEL_VERSION(2, 6, 36)
 	.ndo_set_mac_address =		netvsc_set_mac_addr,
+#endif
 };
 
 /*
