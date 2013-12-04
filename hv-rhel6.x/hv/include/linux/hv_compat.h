@@ -23,6 +23,13 @@
 #include <scsi/scsi_eh.h>
 #include <scsi/scsi_host.h>
 
+#if (defined(CONFIG_SUSE_KERNEL) && LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32))
+#define VLAN_PRIO_MASK		0xe000 /* Priority Code Point */
+#define VLAN_PRIO_SHIFT		13
+#define VLAN_CFI_MASK		0x1000 /* Canonical Format Indicator */
+#define VLAN_TAG_PRESENT	VLAN_CFI_MASK
+#endif
+
 #ifdef CONFIG_MEMORY_HOTPLUG
 #undef CONFIG_MEMORY_HOTPLUG
 #endif
