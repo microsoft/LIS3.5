@@ -51,7 +51,7 @@ static inline int uuid_le_cmp(const uuid_le u1, const uuid_le u2)
 }
 #endif
 
-#if defined(RHEL_RELEASE_VERSION) && (RHEL_RELEASE_CODE < 1539)
+#if (defined(RHEL_RELEASE_VERSION) && (RHEL_RELEASE_CODE < 1539)) || (defined(CONFIG_SUSE_KERNEL) && LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32))
 static inline struct page *skb_frag_page(const skb_frag_t *frag)
 {
 	return frag->page;
