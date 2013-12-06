@@ -219,6 +219,7 @@ struct hvfb_par {
 
 	struct delayed_work dwork;
 	bool update;
+	bool xrefresh;
 
 	u32 pseudo_palette[16];
 	u8 init_buf[MAX_VMBUS_PKT_SIZE];
@@ -379,7 +380,7 @@ static void synthvid_recv_sub(struct hv_device *hdev)
 			synthvid_send_situ(hdev);
 		}
 
-		par->update = msg->feature_chg.is_dirt_needed;
+		par->xrefresh = par->update = msg->feature_chg.is_dirt_needed;
 		if (par->update)
 			schedule_delayed_work(&par->dwork.work, HVFB_UPDATE_DELAY);
 	}
@@ -533,6 +534,13 @@ static void hvfb_update_work(void *data)
 	struct work_struct *w = (struct work_struct *)data;
 	struct hvfb_par *par = container_of(w, struct hvfb_par, dwork.work);
 	struct fb_info *info = par->info;
+	char *argv[] = {"/usr/bin/xrefresh", "-display", ":0.0", NULL};
+	char *envp[] = {"HOME=/", "PATH=/sbin:/usr/sbin:/bin:/usr/bin", NULL };
+
+	if (par->xrefresh) {
+		par->xrefresh = false;
+		call_usermodehelper(argv[0], argv, envp, 0);
+	}
 
 	if (par->fb_ready)
 		synthvid_update(info);
