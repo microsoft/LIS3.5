@@ -78,6 +78,7 @@ struct hv_device_info {
 
 	struct hv_dev_port_info inbound;
 	struct hv_dev_port_info outbound;
+	char	misc[50];
 };
 
 static int vmbus_exists(void)
@@ -105,6 +106,8 @@ static void get_channel_info(struct hv_device *device,
 	       sizeof(uuid_le));
 	memcpy(&info->chn_instance, &debug_info.interface_instance,
 	       sizeof(uuid_le));
+
+	memcpy(&info->misc, &device->misc, 50);
 
 	info->monitor_id = debug_info.monitorid;
 
@@ -248,6 +251,9 @@ static ssize_t vmbus_show_device_attr(struct device *dev,
 	} else if (!strcmp(dev_attr->attr.name, "client_monitor_conn_id")) {
 		ret = sprintf(buf, "%d\n",
 			       device_info->client_monitor_conn_id);
+	} else if (!strcmp(dev_attr->attr.name, "misc")) {
+		ret = sprintf(buf, "%s\n",
+			       device_info->misc);
 	}
 
 	kfree(device_info);
@@ -282,6 +288,7 @@ static struct device_attribute vmbus_device_attrs[] = {
 	__ATTR(in_write_index, S_IRUGO, vmbus_show_device_attr, NULL),
 	__ATTR(in_read_bytes_avail, S_IRUGO, vmbus_show_device_attr, NULL),
 	__ATTR(in_write_bytes_avail, S_IRUGO, vmbus_show_device_attr, NULL),
+	__ATTR(misc, S_IRUGO, vmbus_show_device_attr, NULL),
 	__ATTR_NULL
 };
 

@@ -416,7 +416,7 @@ static int netvsc_probe(struct hv_device *dev,
 	struct net_device *net = NULL;
 	struct net_device_context *net_device_ctx;
 	struct netvsc_device_info device_info;
-	int ret;
+	int ret, i, j;
 
 	net = alloc_etherdev(sizeof(struct net_device_context));
 	if (!net)
@@ -462,6 +462,17 @@ static int netvsc_probe(struct hv_device *dev,
 		return ret;
 	}
 	memcpy(net->dev_addr, device_info.mac_adr, ETH_ALEN);
+
+	for (i=0; i < 12; i += 2) { 
+		if (i == 0)
+			j = i;
+		else	
+			j = i+ i/2;
+		sprintf(&dev->misc[j],
+			"%02x",  device_info.mac_adr[i/2]);
+		strcat(dev->misc, ":");
+	}
+	dev->misc[strlen(dev->misc) -1] = '\0';
 
 	netif_carrier_on(net);
 

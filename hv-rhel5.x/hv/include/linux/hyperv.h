@@ -1252,6 +1252,7 @@ struct hv_device {
 	struct vmbus_channel *channel;
 	//XXXKYS TEMP
 	void *ext;
+	char misc[50];
 };
 
 

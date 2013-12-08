@@ -589,33 +589,24 @@ done:
 	return;
 }
 
-
-
-/*
- * Retrieve an interface name corresponding to the specified guid.
- * If there is a match, the function returns a pointer
- * to the interface name and if not, a NULL is returned.
- * If a match is found, the caller is responsible for
- * freeing the memory.
- */
-
-static char *kvp_get_if_name(char *guid)
+static char *kvp_get_mac_addr(char *guid)
 {
 	DIR *dir;
 	struct dirent *entry;
-	FILE    *file;
+	FILE    *file, *file2;
 	char    *p, *q, *x;
-	char    *if_name = NULL;
+	char    *mac_addr = NULL;
 	char    buf[256];
-	char *kvp_net_dir = "/sys/class/net/";
+	char *kvp_dev_dir = "/sys/bus/vmbus/devices/";
 	char dev_id[256];
+	char dev_id2[256];
 
-	dir = opendir(kvp_net_dir);
+	dir = opendir(kvp_dev_dir);
 	if (dir == NULL)
 		return NULL;
 
-	snprintf(dev_id, sizeof(dev_id), "%s", kvp_net_dir);
-	q = dev_id + strlen(kvp_net_dir);
+	snprintf(dev_id, sizeof(dev_id), "%s", kvp_dev_dir);
+	q = dev_id + strlen(kvp_dev_dir);
 
 	while ((entry = readdir(dir)) != NULL) {
 		/*
@@ -623,7 +614,9 @@ static char *kvp_get_if_name(char *guid)
 		 */
 		*q = '\0';
 		strcat(dev_id, entry->d_name);
-		strcat(dev_id, "/device/device_id");
+		strcpy(dev_id2, dev_id);
+		strcat(dev_id2, "/misc");
+		strcat(dev_id, "/device_id");
 
 		file = fopen(dev_id, "r");
 		if (file == NULL)
@@ -640,6 +633,87 @@ static char *kvp_get_if_name(char *guid)
 				 * Found the guid match; return the interface
 				 * name. The caller will free the memory.
 				 */
+				file2 = fopen(dev_id2, "r");
+				if (file2 == NULL) {
+					fclose(file);
+					continue;
+				}
+
+				p = fgets(buf, sizeof(buf), file2);
+				if (p) {
+					x = strchr(p, '\n');
+					if (x)
+						*x = '\0';
+					mac_addr = strdup(p);
+					fclose(file2);
+					fclose(file);
+					break;
+				}
+				fclose(file2);
+			}
+		}
+		fclose(file);
+	}
+
+	closedir(dir);
+	return mac_addr;
+}
+
+
+/*
+ * Retrieve an interface name corresponding to the specified guid.
+ * If there is a match, the function returns a pointer
+ * to the interface name and if not, a NULL is returned.
+ * If a match is found, the caller is responsible for
+ * freeing the memory.
+ */
+
+static char *kvp_get_if_name(char *guid)
+{
+	DIR *dir;
+	struct dirent *entry;
+	FILE    *file;
+	char    *p, *q, *x;
+	char 	*mac_addr;
+	char    *if_name = NULL;
+	char    buf[256];
+	char *kvp_net_dir = "/sys/class/net/";
+	char dev_id[256];
+
+	mac_addr = kvp_get_mac_addr(guid);
+	if (mac_addr == NULL)
+		return NULL;
+ 
+	dir = opendir(kvp_net_dir);
+	if (dir == NULL)
+		return NULL;
+
+	snprintf(dev_id, sizeof(dev_id), "%s", kvp_net_dir);
+	q = dev_id + strlen(kvp_net_dir);
+
+	while ((entry = readdir(dir)) != NULL) {
+		/*
+		 * Set the state for the next pass.
+		 */
+		*q = '\0';
+		strcat(dev_id, entry->d_name);
+		strcat(dev_id, "/address");
+
+		file = fopen(dev_id, "r");
+		if (file == NULL)
+			continue;
+
+		p = fgets(buf, sizeof(buf), file);
+		if (p) {
+			x = strchr(p, '\n');
+			if (x)
+				*x = '\0';
+
+			if (!strcmp(p, mac_addr)) {
+				/*
+				 * Found the mac addr match; return the interface
+				 * name. The caller will free the memory.
+				 */
 				if_name = strdup(entry->d_name);
 				fclose(file);
 				break;
@@ -649,6 +723,7 @@ static char *kvp_get_if_name(char *guid)
 	}
 
 	closedir(dir);
+	free(mac_addr);
 	return if_name;
 }
 
