@@ -610,8 +610,10 @@ static int kstrtouint(const char *s, unsigned int base, unsigned int *res)
 	int result;
 	char *endbufp = NULL;
 
-	result = (int)simple_strtoul(s, &endbufp, 10);
-	return result;
+	result = simple_strtoul(s, &endbufp, base);
+	if (result > 0)
+		*res = result;
+	return 0;
 }
 
 
