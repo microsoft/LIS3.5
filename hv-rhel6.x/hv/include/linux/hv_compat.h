@@ -23,6 +23,13 @@
 #include <scsi/scsi_eh.h>
 #include <scsi/scsi_host.h>
 
+#if (defined(CONFIG_SUSE_KERNEL) && LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32))
+#define VLAN_PRIO_MASK		0xe000 /* Priority Code Point */
+#define VLAN_PRIO_SHIFT		13
+#define VLAN_CFI_MASK		0x1000 /* Canonical Format Indicator */
+#define VLAN_TAG_PRESENT	VLAN_CFI_MASK
+#endif
+
 #ifdef CONFIG_MEMORY_HOTPLUG
 #undef CONFIG_MEMORY_HOTPLUG
 #endif
@@ -44,14 +51,14 @@
 #define DID_TARGET_FAILURE	0x10
 #endif
 
-#if defined(RHEL_RELEASE_VERSION) && (RHEL_RELEASE_CODE < 1537)
+#if (defined(RHEL_RELEASE_VERSION) && (RHEL_RELEASE_CODE < 1537)) || (defined(CONFIG_SUSE_KERNEL) && LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32))
 static inline int uuid_le_cmp(const uuid_le u1, const uuid_le u2)
 {
 	return memcmp(&u1, &u2, sizeof(uuid_le));
 }
 #endif
 
-#if defined(RHEL_RELEASE_VERSION) && (RHEL_RELEASE_CODE < 1539)
+#if (defined(RHEL_RELEASE_VERSION) && (RHEL_RELEASE_CODE < 1539)) || (defined(CONFIG_SUSE_KERNEL) && LINUX_VERSION_CODE <= KERNEL_VERSION(2, 6, 32))
 static inline struct page *skb_frag_page(const skb_frag_t *frag)
 {
 	return frag->page;
